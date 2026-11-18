@@ -63,7 +63,7 @@ def _decode(raw: bytes, day: date, point: float) -> pd.DataFrame:
 
 
 def download_minutes(start: str, end: str | None = None, symbol: str = "XAUUSD",
-                     cache_dir: str | Path = "data/cache", workers: int = 12, verbose: bool = True) -> pd.DataFrame:
+                     cache_dir: str | Path = "data/cache", workers: int = 2, verbose: bool = True) -> pd.DataFrame:
     """Return 1-minute candles for [start, end], downloading missing days in parallel."""
     point = POINT.get(symbol, 100000.0)
     cache = Path(cache_dir) / symbol
@@ -83,12 +83,15 @@ def download_minutes(start: str, end: str | None = None, symbol: str = "XAUUSD",
     with ThreadPoolExecutor(workers) as ex:
         futs = {ex.submit(_fetch, URL.format(sym=symbol, y=d.year, m=d.month - 1, d=d.day)): d for d in todo}
         for f in as_completed(futs):
-            path(futs[f]).write_bytes(f.result())
+            try:
+                path(futs[f]).write_bytes(f.result())
+            except RuntimeError as e:
+                print(f"  skipped {futs[f]} ({e}); re-run to retry")
             done += 1
-            if verbose and done % 250 == 0:
+            if verbose and done % 20 == 0:
                 print(f"  downloaded {done}/{len(todo)} days")
 
-    frames = [_decode(path(d).read_bytes(), d, point) for d in days]
+    frames = [_decode(path(d).read_bytes(), d, point) for d in days if path(d).exists()]
     frames = [f for f in frames if not f.empty]
     if not frames:
         raise RuntimeError("no data downloaded")
