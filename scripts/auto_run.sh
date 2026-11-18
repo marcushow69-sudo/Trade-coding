@@ -12,7 +12,7 @@ download_hours('2015-01-01')
 " 2>&1 | tee -a data/download.log
 status=${PIPESTATUS[0]}
 
-git add data/cache >/dev/null 2>&1
+git add -f data/cache >/dev/null 2>&1
 git commit -q -m "Cache XAUUSD hourly data from Dukascopy" >/dev/null 2>&1 || true
 
 if [ "$status" -eq 0 ] && ! grep -q "skipped" <(tail -n 200 data/download.log | sed -n '/hourly:/,$p'); then

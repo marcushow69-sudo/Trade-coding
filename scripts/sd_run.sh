@@ -13,7 +13,7 @@ download_minutes('$START')
 status=$?
 tail -3 data/sd_download.log
 
-git add data/cache >/dev/null 2>&1
+git add -f data/cache >/dev/null 2>&1
 git commit -q -m "Cache XAUUSD minute data from Dukascopy" >/dev/null 2>&1 || true
 
 if [ "$status" -eq 0 ] && ! grep -q "skipped" data/sd_download.log; then

@@ -7,3 +7,4 @@ data/*.csv
 data/*.log
 !data/README.md
 data/*.out
+data/cache/XAUUSD/*.bi5
