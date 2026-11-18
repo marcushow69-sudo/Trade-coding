@@ -1,0 +1,2 @@
+direction,entry_time,entry_price,lots,stop,target,exit_time,exit_price,exit_reason,pnl,r_multiple
+1,2024-01-02,2063.825,0.05,,,2026-11-17 23:00:00,3848.36,end,8922.325000000003,
