@@ -91,10 +91,12 @@ class WalkForwardOutput:
     folds: int
 
 
-def walk_forward(df: pd.DataFrame, cfg: MLConfig | None = None, verbose: bool = True) -> WalkForwardOutput:
+def walk_forward(df: pd.DataFrame, cfg: MLConfig | None = None, verbose: bool = True,
+                 X: pd.DataFrame | None = None, y: pd.DataFrame | None = None) -> WalkForwardOutput:
+    """Rolling train/predict. Pass precomputed features ``X`` / labels ``y`` to save time in grid searches."""
     cfg = cfg or MLConfig()
-    X = build_features(df)
-    y = triple_barrier_labels(df, cfg.horizon, cfg.tp_atr, cfg.sl_atr)
+    X = build_features(df) if X is None else X
+    y = triple_barrier_labels(df, cfg.horizon, cfg.tp_atr, cfg.sl_atr) if y is None else y
     valid = X.notna().all(axis=1)
 
     proba = pd.DataFrame(np.nan, index=df.index, columns=["p_long", "p_short"])

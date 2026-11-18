@@ -4,4 +4,5 @@ __pycache__/
 .pytest_cache/
 results/
 data/*.csv
+data/*.log
 !data/README.md

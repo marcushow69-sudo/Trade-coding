@@ -33,6 +33,7 @@ class BacktestConfig:
     tp_atr: float | None = 3.0          # take-profit in ATR multiples (None = no target)
     atr_period: int = 14
     max_lots: float = 50.0
+    max_leverage: float = 20.0          # cap position notional at N x equity
     min_lots: float = 0.01
     exit_on_flat: bool = True           # close when the signal goes to 0
     max_hold_bars: int | None = None    # time stop: close after N bars
@@ -108,12 +109,16 @@ def run_backtest(df: pd.DataFrame, signals: pd.Series, config: BacktestConfig | 
                 if cfg.fixed_lots is not None:
                     lots = cfg.fixed_lots
                 else:
-                    # risk-based sizing; without a stop, assume a 2-ATR adverse move as the risk unit
+                    # risk-based sizing; without a stop, assume a 2-ATR adverse move as the risk unit.
+                    # Round-trip costs count as part of the risk so tiny stops can't create huge positions.
                     risk_dist = abs(entry - stop) if stop is not None else 2 * a[i - 1]
+                    risk_dist += cfg.spread + 2 * cfg.slippage + cfg.commission_per_lot / cfg.contract_size
                     lots = cash * cfg.risk_per_trade / (risk_dist * cfg.contract_size)
-                lots = float(np.clip(np.floor(lots * 100) / 100, cfg.min_lots, cfg.max_lots))
-                pos = Trade(d, times[i], entry, lots, stop, target)
-                entry_bar = i
+                    lots = min(lots, cash * cfg.max_leverage / (entry * cfg.contract_size))
+                lots = float(min(np.floor(lots * 100) / 100, cfg.max_lots))
+                if lots >= cfg.min_lots:
+                    pos = Trade(d, times[i], entry, lots, stop, target)
+                    entry_bar = i
 
         # 2) intrabar stop / target checks (bid for longs, ask for shorts)
         if pos is not None:
