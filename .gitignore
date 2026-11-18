@@ -6,3 +6,4 @@ results/
 data/*.csv
 data/*.log
 !data/README.md
+data/*.out
